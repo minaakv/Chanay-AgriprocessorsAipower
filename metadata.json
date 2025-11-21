@@ -1,0 +1,5 @@
+{
+  "name": "Chanay Agriprocessors AI Studio",
+  "description": "An AI-powered image editing suite for Chanay Agriprocessors. Upload product photos of sauces and chutneys and use natural language to edit, enhance, or style them using Gemini 2.5 Flash Image.",
+  "requestFramePermissions": []
+}
