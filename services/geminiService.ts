@@ -1,16 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
-
-// Initialize the client with the API key from the environment
-// @ts-ignore - process is defined via Vite define plugin
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 /**
- * Edits an image based on a text prompt using Gemini 2.5 Flash Image.
- * 
- * @param base64Image Raw base64 string of the image (no data URI prefix).
- * @param mimeType The MIME type of the image (e.g., 'image/jpeg').
- * @param prompt The text instruction for editing.
- * @returns A promise resolving to the base64 data URI of the generated image.
+ * Edits an image based on a text prompt using our internal Next.js API.
+ * This keeps the API key hidden on the server.
  */
 export const editImage = async (
   base64Image: string,
@@ -18,43 +8,28 @@ export const editImage = async (
   prompt: string
 ): Promise<string> => {
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: base64Image,
-              mimeType: mimeType,
-            },
-          },
-          {
-            text: prompt,
-          },
-        ],
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      // No specific imageConfig needed for basic editing unless aspect ratio changes are desired
+      body: JSON.stringify({
+        base64Image,
+        mimeType,
+        prompt,
+      }),
     });
 
-    // Iterate through parts to find the image
-    // The response might contain text (reasoning) and/or inlineData (image)
-    // We use optional chaining (?.) to safely access nested properties
-    const candidate = response.candidates?.[0];
-    if (candidate?.content?.parts) {
-      for (const part of candidate.content.parts) {
-        if (part.inlineData && part.inlineData.data) {
-          // Construct the data URI
-          // Note: The API usually returns PNG for generated images, but we check mimeType if provided
-          const returnMime = part.inlineData.mimeType || 'image/png';
-          return `data:${returnMime};base64,${part.inlineData.data}`;
-        }
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to generate image');
     }
-    
-    throw new Error("No image data found in the response.");
+
+    const data = await response.json();
+    return data.resultImage;
 
   } catch (error) {
-    console.error("Error calling Gemini API:", error);
+    console.error("Error calling Internal API:", error);
     throw error;
   }
 };

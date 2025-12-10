@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef } from 'react';
 import { ImageUploadState } from '../types';
 import { editImage } from '../services/geminiService';
