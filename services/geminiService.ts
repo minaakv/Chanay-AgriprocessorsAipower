@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize the client with the API key from the environment
+// @ts-ignore - process is defined via Vite define plugin
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
@@ -37,8 +38,10 @@ export const editImage = async (
 
     // Iterate through parts to find the image
     // The response might contain text (reasoning) and/or inlineData (image)
-    if (response.candidates && response.candidates[0].content.parts) {
-      for (const part of response.candidates[0].content.parts) {
+    // We use optional chaining (?.) to safely access nested properties
+    const candidate = response.candidates?.[0];
+    if (candidate?.content?.parts) {
+      for (const part of candidate.content.parts) {
         if (part.inlineData && part.inlineData.data) {
           // Construct the data URI
           // Note: The API usually returns PNG for generated images, but we check mimeType if provided
